@@ -1,0 +1,49 @@
+#SOURCE=jansson-2.13.1
+#SOURCE=jansson-2.7
+SOURCE=$(PJ_JANSSON_VERSION)
+#Jansson is a C library for encoding, decoding and manipulating JSON data
+#https://digip.org/jansson/
+
+TOP = $(shell pwd)
+PWD = $(shell pwd)
+
+.PHONY: all clean distclean install romfs
+all: .configured
+	make -C $(SOURCE)
+
+clean:
+	make -C $(SOURCE) clean
+
+distclean:
+ifneq ($(wildcard ./$(SOURCE)),)
+	$(PJ_SH_RMDIR) $(SOURCE)
+endif
+
+.unpack:
+	tar -xvf $(PJ_DOWNLOAD)/$(SOURCE).tar.*
+	touch $@
+
+.patched: .unpack
+	if [ -d patches/$(SOURCE) ]; then \
+		$(PJ_SH_CP) patches/$(SOURCE)/* $(SOURCE); \
+	fi
+	touch $@
+
+.configured: .patched
+	cd $(SOURCE) \
+	&& $(CONFIGURE_FLAGS) ./configure \
+		--prefix=$(SDK_ROOT_DIR) \
+		--host=$(PJ_HOST) \
+		--build=$(PJ_BUILD) \
+		--target=$(PJ_HOST)
+	touch $@
+
+install:
+	make -C $(SOURCE) install
+
+romfs:
+ifneq ("$(HOMEX_ROOT_DIR)", "")
+	$(PJ_SH_CP) ${SOURCE}/src/.libs/libjansson.so* $(HOMEX_LIB_DIR)
+
+	#$(PJ_SH_CP) ${SOURCE}/src/jansson*.h $(HOMEX_INC_DIR)
+endif

@@ -1,0 +1,48 @@
+#SOURCE=mosquitto-2.0.14
+#SOURCE=mosquitto-1.6.8
+SOURCE=$(PJ_MOSQUITTO_VERSION)
+#Eclipse Mosquitto is an open source (EPL/EDL licensed) message broker that implements the MQTT protocol
+#https://mosquitto.org
+#https://github.com/eclipse/mosquitto
+
+TOP = $(shell pwd)
+PWD = $(shell pwd)
+
+.PHONY: all clean distclean install romfs
+all: .configured
+	$(CONFIGURE_FLAGS) \
+		make -C $(SOURCE) \
+			WITH_SRV=no \
+			LDFLAGS+="-lssl -lcrypto"
+
+clean:
+	make -C $(SOURCE) clean
+
+distclean:
+ifneq ($(wildcard ./$(SOURCE)),)
+	$(PJ_SH_RMDIR) $(SOURCE)
+endif
+
+.unpack:
+	tar -xvf $(PJ_DOWNLOAD)/$(SOURCE).tar.*
+	touch $@
+
+.patched: .unpack
+	if [ -d patches/$(SOURCE) ]; then \
+		$(PJ_SH_CP) patches/$(SOURCE)/* $(SOURCE); \
+	fi
+	touch $@
+
+.configured: .patched
+	touch $@
+
+install:
+	make -C $(SOURCE) install
+
+romfs:
+ifneq ("$(HOMEX_ROOT_DIR)", "")
+	$(PJ_SH_CP) $(SOURCE)/lib/libmosquitto.so* $(HOMEX_LIB_DIR)
+	$(PJ_SH_CP) $(SOURCE)/lib/cpp/libmosquittopp.so* $(HOMEX_LIB_DIR)
+	$(PJ_SH_CP) $(SOURCE)/src/mosquitto $(HOMEX_BIN_DIR)
+	$(PJ_SH_CP) ./etc/mosquitto.conf $(HOMEX_CONF_DIR)
+endif

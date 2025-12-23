@@ -1,0 +1,74 @@
+Catch2 cmake, 
+Python openwrt - new
+baresip GNU, baresip
+baresip-webrtc GNU, baresip
+bctoolbox cmake, sip - Linphone.org, ORTP -> BCTOOLBOX -> BCUNIT, MBEDTLS
+bcunit cmake, sip - Linphone.org, ORTP -> BCTOOLBOX -> BCUNIT, MBEDTLS
+beex lanka
+boost aws-iot-securetunneling-localproxy
+boost-cmake cmake, aws-iot-securetunneling-localproxy
+bzip2 openwrt - new
+cJSON cmake, 
+curl openwrt - dup / curl-7.60.0.tar.xz
+exosip sip <
+expat openwrt - dup / expat-2.2.9.tar.xz
+expat050 openwrt - dup
+freeswitch FreeSWITCH-> spandsp, sofia-sip, sqlite, speex, ldns
+gdbm openwrt - dup
+gst-devtools meson, gstreamer
+gst-libav meson, gstreamer
+gst-plugins-bad meson, gstreamer
+gst-plugins-base meson, gstreamer
+gst-plugins-good meson, gstreamer
+gstreamer meson, gstreamer
+honeyx lanka
+hornetx lanka
+json-c openwrt - new / json-c-0.12.1-nodoc.tar.gz
+kvssink cmake, KVSSINK-> Curl, Openssl and Log4cplus
+libezsp cmake, 
+libnl-tiny openwrt - new
+libre GNU, baresip
+librem GNU, baresip
+libubox cmake, openwrt - new / libubox-2018-07-25-c83a84af.tar.xz
+libusb openwrt - dup / libusb-1.0.22.tar.bz2
+libuv openwrt - dup
+libwebsockets cmake, 
+log4cplus KVSSINK-> Curl, Openssl and Log4cplus
+lua openwrt - new
+mbedtls cmake, ORTP -> BCTOOLBOX -> BCUNIT, MBEDTLS
+mosquitto MQTT
+ncurses openwrt - dup / ncurses-6.1.tar.gz
+openssl openwrt - dup / openssl-1.0.2p.tar.gz
+ortp cmake, rtp, ORTP -> BCTOOLBOX -> BCUNIT, MBEDTLS
+osip sip <
+protobuf cmake, aws-iot-securetunneling-localproxy
+readline openwrt - dup / readline-7.0.tar.gz
+sofia-sip sip <
+sofsip-cli siposip sip <
+spandsp sip <
+speex sip
+sqlite openwrt - new
+swconfig openwrt - new / ???
+uHTTPd cmake, openwrt - new / uhttpd-2018-06-26-796d42bc.tar.xz
+ubox cmake, openwrt - new / ubox-2018-02-14-128bc35f.tar.xz
+ubus cmake, openwrt - new / ubus-2018-07-26-40e0931e.tar.xz
+uci cmake, openwrt - new / uci-2018-08-11-4c8b4d6e.tar.xz
+uriparser cmake
+ustream cmake, openwrt - new / ustream-ssl-2018-05-22-5322f9db.tar.xz
+utilx9 lanka
+x265 cmake, 
+zlib openwrt - dup / zlib-1.2.11.tar.xz
+kvsWebrtc cmake, 
+libusrsctp cmake, 
+libsrtp cmake, 
+kvsProducer cmake,
+kvsPic cmake,
+BlueZ BlueZ-> eudev, libxml2, libical
+libical cmake, BlueZ
+yajl cmake,
+gst-plugins-ugly meson, gstreamer
+nlohmann_json cmake,
+gst-orc meson, gstreamer
+gst-rtsp-server meson, gstreamer
+libpng cmake?
+libswconfig swconfig openwrt - new / ???

@@ -1,0 +1,128 @@
+diff -Naur openssl-OpenSSL_1_1_1k/crypto/bio/bio_lib.c openssl-OpenSSL_1_1_1k_new/crypto/bio/bio_lib.c
+--- openssl-OpenSSL_1_1_1k/crypto/bio/bio_lib.c	2021-03-25 21:28:38.000000000 +0800
++++ openssl-OpenSSL_1_1_1k_new/crypto/bio/bio_lib.c	2021-08-26 14:48:44.457700375 +0800
+@@ -80,6 +80,10 @@
+     bio->method = method;
+     bio->shutdown = 1;
+     bio->references = 1;
++//#define   SSL_SET_FD_RCV_MSG
++    bio->rcv_msg = NULL;
++    bio->rcv_msg_len = 0;
++//#endif
+ 
+     if (!CRYPTO_new_ex_data(CRYPTO_EX_INDEX_BIO, bio, &bio->ex_data))
+         goto err;
+diff -Naur openssl-OpenSSL_1_1_1k/crypto/bio/bio_local.h openssl-OpenSSL_1_1_1k_new/crypto/bio/bio_local.h
+--- openssl-OpenSSL_1_1_1k/crypto/bio/bio_local.h	2021-03-25 21:28:38.000000000 +0800
++++ openssl-OpenSSL_1_1_1k_new/crypto/bio/bio_local.h	2021-08-26 14:50:34.265498531 +0800
+@@ -118,6 +118,10 @@
+     BIO_callback_fn callback;
+     BIO_callback_fn_ex callback_ex;
+     char *cb_arg;               /* first argument for the callback */
++//#define   SSL_SET_FD_RCV_MSG
++    unsigned char *rcv_msg;
++    unsigned rcv_msg_len;
++//#endif
+     int init;
+     int shutdown;
+     int flags;                  /* extra storage */
+diff -Naur openssl-OpenSSL_1_1_1k/crypto/bio/bss_sock.c openssl-OpenSSL_1_1_1k_new/crypto/bio/bss_sock.c
+--- openssl-OpenSSL_1_1_1k/crypto/bio/bss_sock.c	2021-03-25 21:28:38.000000000 +0800
++++ openssl-OpenSSL_1_1_1k_new/crypto/bio/bss_sock.c	2021-08-26 14:47:57.607356311 +0800
+@@ -87,6 +87,14 @@
+         a->init = 0;
+         a->flags = 0;
+     }
++//#define   SSL_SET_FD_RCV_MSG
++    if (a->rcv_msg) {
++        //Clean up
++        free(a->rcv_msg);
++        a->rcv_msg = NULL;
++        a->rcv_msg_len = 0;
++    }
++//#endif
+     return 1;
+ }
+ 
+@@ -94,6 +102,20 @@
+ {
+     int ret = 0;
+ 
++//#define   SSL_SET_FD_RCV_MSG
++    //Check if there is any unread message
++    if (b->rcv_msg && b->rcv_msg_len) {
++        //Use the unread message instead of reading from socket
++        ret = b->rcv_msg_len;
++        memcpy(out, b->rcv_msg, b->rcv_msg_len);
++        //Clean up
++        free(b->rcv_msg);
++        b->rcv_msg = NULL;
++        b->rcv_msg_len = 0;
++        return (ret);
++    }
++//#endif
++
+     if (out != NULL) {
+         clear_socket_error();
+         ret = readsocket(b->num, out, outl);
+diff -Naur openssl-OpenSSL_1_1_1k/include/openssl/ssl.h openssl-OpenSSL_1_1_1k_new/include/openssl/ssl.h
+--- openssl-OpenSSL_1_1_1k/include/openssl/ssl.h	2021-03-25 21:28:38.000000000 +0800
++++ openssl-OpenSSL_1_1_1k_new/include/openssl/ssl.h	2021-08-26 14:46:48.500316939 +0800
+@@ -1537,6 +1537,9 @@
+ __owur int SSL_has_pending(const SSL *s);
+ # ifndef OPENSSL_NO_SOCK
+ __owur int SSL_set_fd(SSL *s, int fd);
++//#define   SSL_SET_FD_RCV_MSG
++__owur int SSL_set_fd_rcv_msg(SSL *s, int fd, unsigned char *rcv_msg, unsigned rcv_msg_len);
++//#endif
+ __owur int SSL_set_rfd(SSL *s, int fd);
+ __owur int SSL_set_wfd(SSL *s, int fd);
+ # endif
+diff -Naur openssl-OpenSSL_1_1_1k/ssl/ssl_lib.c openssl-OpenSSL_1_1_1k_new/ssl/ssl_lib.c
+--- openssl-OpenSSL_1_1_1k/ssl/ssl_lib.c	2021-03-25 21:28:38.000000000 +0800
++++ openssl-OpenSSL_1_1_1k_new/ssl/ssl_lib.c	2021-08-26 15:45:25.591109072 +0800
+@@ -10,6 +10,7 @@
+  */
+ 
+ #include <stdio.h>
++#include "crypto/bio/bio_local.h"
+ #include "ssl_local.h"
+ #include <openssl/objects.h>
+ #include <openssl/x509v3.h>
+@@ -1366,6 +1367,36 @@
+     return ret;
+ }
+ 
++//#define   SSL_SET_FD_RCV_MSG
++// Set socket file descriptor to a SSL context with received message to be used when the socket is
++// first read
++int SSL_set_fd_rcv_msg(SSL *s, int fd, unsigned char *rcv_msg, unsigned rcv_msg_len)
++{
++    int ret = 0;
++    BIO *bio = NULL;
++
++    bio = BIO_new(BIO_s_socket());
++
++    if (bio == NULL) {
++        SSLerr(SSL_F_SSL_SET_FD, ERR_R_BUF_LIB);
++        goto err;
++    }
++    BIO_set_fd(bio, fd, BIO_NOCLOSE);
++    SSL_set_bio(s, bio, bio);
++
++    if (rcv_msg && rcv_msg_len) {
++        bio->rcv_msg = (unsigned char *)OPENSSL_malloc(rcv_msg_len);
++        if (bio->rcv_msg) {
++            memcpy(bio->rcv_msg, rcv_msg, rcv_msg_len);
++            bio->rcv_msg_len = rcv_msg_len;
++        }
++    }
++    ret = 1;
++ err:
++    return (ret);
++}
++//#endif
++
+ int SSL_set_wfd(SSL *s, int fd)
+ {
+     BIO *rbio = SSL_get_rbio(s);

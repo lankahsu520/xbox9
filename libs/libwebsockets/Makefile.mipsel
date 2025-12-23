@@ -1,0 +1,89 @@
+#SOURCE=libwebsockets-4.2.2
+#SOURCE=libwebsockets-4.1.6
+#SOURCE=libwebsockets-3.2.2
+#SOURCE=libwebsockets-3.2.0
+SOURCE=$(PJ_LIBWEBSOCKETS_VERSION)
+#https://libwebsockets.org
+#https://github.com/warmcat/libwebsockets
+
+ifeq ("$(PJ_HAS_LIBUV)", "yes")
+CMAKE_FLAGS += -DLWS_LIBUV_LIBRARIES=$(SDK_LIB_DIR)/libuv.so
+endif
+
+ifeq ("$(PJ_HAS_ZLIB)", "yes")
+CMAKE_FLAGS += -DLWS_ZLIB_LIBRARIES=$(SDK_LIB_DIR)/libz.so
+endif
+
+ifeq ("$(PJ_OPENSSL_VERSION)", "openssl-OpenSSL_1_1_1k")
+CMAKE_FLAGS += \
+		-DLWS_HAVE_HMAC_CTX_new=1 \
+		-DLWS_HAVE_SSL_EXTRA_CHAIN_CERTS=1 \
+		-DLWS_HAVE_OPENSSL_ECDH_H=1 \
+		-DLWS_HAVE_EVP_MD_CTX_free=1 \
+		-DLWS_WITH_THREADPOOL=1 \
+		-DLWS_HAVE_EVENTFD=0
+endif
+
+TOP = $(shell pwd)
+PWD = $(shell pwd)
+
+.PHONY: all clean distclean install romfs
+all: .configured
+	make -C $(SOURCE)/$(PJ_BUILD_DIR) #VERBOSE=1
+
+clean:
+	make -C $(SOURCE)/$(PJ_BUILD_DIR) clean
+
+distclean:
+ifneq ($(wildcard ./$(SOURCE)),)
+	$(PJ_SH_RMDIR) $(SOURCE)
+endif
+
+.unpack:
+	tar -xvf $(PJ_DOWNLOAD)/$(SOURCE).tar.*
+	#unzip $(SOURCE).zip
+	touch $@
+
+.patched: .unpack
+	if [ -d patches/$(SOURCE) ]; then \
+		$(PJ_SH_CP) patches/$(SOURCE)/* $(SOURCE); \
+	fi
+	touch $@
+
+.cmake: .patched
+	cd $(SOURCE) \
+	&& $(PJ_SH_MKDIR) cmake \
+	&& $(PJ_SH_CP) $(PJ_CMAKE_CROSS) ./cmake/build.cmake
+	touch $@
+
+.configured: .cmake
+	cd $(SOURCE) \
+	&& $(PJ_SH_MKDIR) $(PJ_CMAKE_BUILD_DIR) \
+	&& cd $(PJ_CMAKE_BUILD_DIR) \
+	&& cmake \
+		-DOPENSSL_ROOT_DIR=$(SDK_ROOT_DIR) \
+		-DLWS_WITH_LIBUV=1 \
+		-DLWS_WITH_HTTP2=1 \
+		-DLWS_WITH_LWSWS=1 \
+		-DLWS_WITH_MINIMAL_EXAMPLES=1 \
+		-DLWS_WITHOUT_EXTENSIONS=0 \
+		-DLWS_WITH_PLUGINS=1 \
+		-DCMAKE_BUILD_TYPE=DEBUG \
+		-DDISABLE_WERROR=ON \
+		$(CMAKE_FLAGS) \
+		$(PJ_CMAKE_FLAGS) \
+		-DCMAKE_TOOLCHAIN_FILE=../cmake/build.cmake \
+		-S ..
+	#	-DCMAKE_BUILD_TYPE=RELEASE \
+	#	-DLWS_LIBUV_INCLUDE_DIRS=$(SDK_INC_DIR) \
+	#	-DLWS_ZLIB_INCLUDE_DIRS=$(SDK_INC_DIR) \
+	touch $@
+
+install:
+	make -C $(SOURCE)/$(PJ_BUILD_DIR) install
+
+romfs:
+ifneq ("$(HOMEX_ROOT_DIR)", "")
+	$(PJ_SH_CP) $(SOURCE)/$(PJ_BUILD_DIR)/lib/libwebsockets.so* $(HOMEX_LIB_DIR)
+	$(PJ_SH_CP) $(SOURCE)/$(PJ_BUILD_DIR)/lib/libwebsockets-evlib_uv.so* $(HOMEX_LIB_DIR)
+endif

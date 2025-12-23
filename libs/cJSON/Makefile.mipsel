@@ -1,0 +1,59 @@
+#SOURCE=cJSON-1.7.15
+#SOURCE=cJSON-1.7.13
+SOURCE=$(PJ_CJSON_VERSION)
+#Ultralightweight JSON parser in ANSI C
+#https://github.com/DaveGamble/cJSON
+
+TOP = $(shell pwd)
+PWD = $(shell pwd)
+
+.PHONY: all clean distclean install romfs
+all: .configured
+	make -C $(SOURCE)/$(PJ_BUILD_DIR) #VERBOSE=1
+
+clean:
+	make -C $(SOURCE)/$(PJ_BUILD_DIR) clean
+
+distclean:
+ifneq ($(wildcard ./$(SOURCE)),)
+	$(PJ_SH_RMDIR) $(SOURCE)
+endif
+
+.unpack:
+	tar -xvf $(PJ_DOWNLOAD)/$(SOURCE).tar.*
+	touch $@
+
+.patched: .unpack
+	if [ -d patches/$(SOURCE) ]; then \
+		$(PJ_SH_CP) patches/$(SOURCE)/* $(SOURCE); \
+	fi
+	touch $@
+
+.cmake: .patched
+	cd $(SOURCE) \
+	&& $(PJ_SH_MKDIR) cmake \
+	&& $(PJ_SH_CP) $(PJ_CMAKE_CROSS) ./cmake/build.cmake
+	touch $@
+
+.configured: .cmake
+	cd $(SOURCE) \
+	&& $(PJ_SH_MKDIR) $(PJ_CMAKE_BUILD_DIR) \
+	&& cd $(PJ_CMAKE_BUILD_DIR) \
+	&& cmake \
+		-DENABLE_CJSON_UTILS=On \
+		$(PJ_CMAKE_FLAGS) \
+		-DCMAKE_TOOLCHAIN_FILE=../cmake/build.cmake \
+		-S ..
+		#-DCMAKE_VERBOSE_MAKEFILE=ON \
+		#-DCMAKE_MODULE_LINKER_FLAGS=-L$(SDK_LIB_DIR) \
+		#-DCMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE=$(SDK_INC_DIR)
+		#-DBUILD_SHARED_AND_STATIC_LIBS=On
+	touch $@
+
+install:
+	make -C $(SOURCE)/$(PJ_BUILD_DIR) install
+
+romfs:
+ifneq ("$(HOMEX_ROOT_DIR)", "")
+	$(PJ_SH_CP) $(SOURCE)/$(PJ_BUILD_DIR)/libcjson.so* $(HOMEX_LIB_DIR)
+endif

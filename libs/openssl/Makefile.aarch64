@@ -1,0 +1,64 @@
+#SOURCE=openssl-OpenSSL_1_1_1k
+#SOURCE=openssl-1.1.1h
+#SOURCE=openssl-1.0.2u
+#SOURCE=openssl-1.0.2n
+SOURCE=$(PJ_OPENSSL_VERSION)
+#OpenSSL is a robust, commercial-grade, and full-featured toolkit for the Transport Layer Security (TLS) and Secure Sockets Layer (SSL) protocols
+#https://www.openssl.org
+#openwrt/package/libs/openssl
+
+TOP = $(shell pwd)
+PWD = $(shell pwd)
+
+.PHONY: all clean distclean install romfs
+all: .configured
+	$(CONFIGURE_FLAGS) make -C $(SOURCE)
+
+clean:
+	make -C $(SOURCE) clean
+
+distclean:
+ifneq ($(wildcard ./$(SOURCE)),)
+	$(PJ_SH_RMDIR) $(SOURCE)
+endif
+
+.unpack:
+	tar -xvf $(PJ_DOWNLOAD)/$(SOURCE).tar.*
+	touch $@
+
+.patched: .unpack
+ifeq ("$(PJ_HAS_ZWARE)", "yes")
+	if [ -d patches/$(SOURCE) ]; then \
+		$(PJ_SH_CP) patches/$(SOURCE)/* $(SOURCE); \
+	fi
+	#[ -e patches/$(SOURCE).patch ] && cd $(SOURCE) && patch -p1 < ../patches/$(SOURCE).patch
+endif
+	touch $@
+
+.configured: .patched
+	cd $(SOURCE) \
+	&& $(CONFIGURE_FLAGS) ./Configure \
+		--prefix=$(SDK_ROOT_DIR) \
+		linux-generic32 threads shared no-asm -DL_ENDIAN
+	#$(PJ_SH_SED) "s|-m64||g" $(SOURCE)/Makefile;
+	#$(PJ_SH_SED) "s|CFLAG= -fPIC|CFLAG=$$\(CFLAGS_EXT\) -fPIC|g" $(SOURCE)/Makefile;
+	touch $@
+
+install:
+	make -C $(SOURCE) install_sw
+	$(PJ_SH_CP) $(SOURCE)/apps/openssl.cnf ${SDK_ROOT_DIR}/etc
+	$(PJ_SH_MKDIR) ${SDK_ROOT_DIR}/ssl
+	$(PJ_SH_CP) $(SOURCE)/apps/openssl.cnf ${SDK_ROOT_DIR}/ssl
+	chmod 755 ${SDK_ROOT_DIR}/lib/libssl.so.*
+	chmod 755 ${SDK_ROOT_DIR}/lib/libcrypto.so.*
+	#$(PJ_SH_MKDIR) ${SDK_ROOT_DIR}/crypto
+	#cd ${SDK_ROOT_DIR}/crypto; ln -s ../include/openssl/opensslv.h opensslv.h
+
+romfs:
+ifneq ("$(HOMEX_ROOT_DIR)", "")
+	$(PJ_SH_CP) ${SOURCE}/libssl.so* $(HOMEX_LIB_DIR)
+	$(PJ_SH_CP) ${SOURCE}/libcrypto.so* $(HOMEX_LIB_DIR)
+
+	$(PJ_SH_CP) ${SOURCE}/apps/openssl $(HOMEX_BIN_DIR)
+	$(PJ_SH_CP) ${SOURCE}/apps/openssl.cnf $(HOMEX_ETC_DIR)
+endif

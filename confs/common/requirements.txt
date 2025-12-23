@@ -1,0 +1,7 @@
+pip
+setuptools
+wheel
+
+cmake==3.31.4
+meson==1.8.3
+ninja==1.10.0
