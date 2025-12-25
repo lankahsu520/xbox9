@@ -5,6 +5,8 @@ SOURCE=$(PJ_DBUS_VERSION)
 #https://www.freedesktop.org/wiki/Software/dbus/
 #https://dbus.freedesktop.org/releases/dbus/
 
+#CMAKE_VERBOSE="VERBOSE=1"
+
 ifneq ("$(PJ_DBUS_SOCKET)", "")
 CONFIGURE_EXT += --with-system-socket=$(PJ_DBUS_SOCKET)
 endif
@@ -37,10 +39,18 @@ PWD = $(shell pwd)
 
 .PHONY: all clean distclean install romfs
 all: .configured
-	make -C $(SOURCE)
+	if [ ! -f $(SOURCE)/CMakeLists.txt ]; then \
+		make -C $(SOURCE); \
+	else \
+		make -C $(SOURCE)/$(PJ_BUILD_DIR) $(CMAKE_VERBOSE); \
+	fi
 
 clean:
+ifeq ($(wildcard $(SOURCE)/CMakeLists.txt),)
 	make -C $(SOURCE) clean
+else
+	make -C $(SOURCE)/$(PJ_BUILD_DIR) clean
+endif
 
 distclean:
 ifneq ($(wildcard ./$(SOURCE)),)
@@ -57,26 +67,58 @@ endif
 	fi
 	touch $@
 
-.configured: .patched
+.cmake: .patched
 	cd $(SOURCE) \
-	&& $(CONFIGURE_FLAGS) \
-		./configure \
-		--prefix=$(SDK_ROOT_DIR) \
-		--host=$(PJ_HOST) \
-		--build=$(PJ_BUILD) \
-		$(CONFIGURE_EXT) \
-		--target=$(PJ_HOST)
+	&& $(PJ_SH_MKDIR) cmake \
+	&& $(PJ_SH_CP) $(PJ_CMAKE_CROSS) ./cmake/build.cmake
+	touch $@
+
+.configured: .cmake
+	if [ ! -f $(SOURCE)/CMakeLists.txt ]; then \
+		cd $(SOURCE) \
+		&& $(CONFIGURE_FLAGS) \
+			./configure \
+			--prefix=$(SDK_ROOT_DIR) \
+			--host=$(PJ_HOST) \
+			--build=$(PJ_BUILD) \
+			$(CONFIGURE_EXT) \
+			--target=$(PJ_HOST); \
+	else \
+		cd $(SOURCE) \
+		&& $(PJ_SH_MKDIR) $(PJ_CMAKE_BUILD_DIR) \
+		&& cd $(PJ_CMAKE_BUILD_DIR) \
+		&& cmake \
+			-DWITH_SYSTEMD_SYSTEMUNITDIR=$(SDK_ROOT_DIR)/lib/systemd/system \
+			-DDBUS_SESSION_SOCKET_DIR=/tmp \
+			$(PJ_CMAKE_FLAGS) \
+			-DCMAKE_TOOLCHAIN_FILE=../cmake/build.cmake \
+			-S ..; \
+	fi
+		#-DCMAKE_VERBOSE_MAKEFILE=ON \
+		#-DCMAKE_MODULE_LINKER_FLAGS=-L$(SDK_LIB_DIR) \
+		#-DCMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE=$(SDK_INC_DIR)
+		#-DOPENSSL_ROOT_DIR=$(SDK_ROOT_DIR) \
 	touch $@
 
 install:
+ifeq ($(wildcard $(SOURCE)/CMakeLists.txt),)
 	make -C $(SOURCE) install
+else
+	make -C $(SOURCE)/$(PJ_BUILD_DIR) install
+endif
 
 romfs:
 ifneq ("$(HOMEX_ROOT_DIR)", "")
+ifeq ($(wildcard $(SOURCE)/CMakeLists.txt),)
 	$(PJ_SH_CP) ${SOURCE}/dbus/.libs/libdbus*.so* $(HOMEX_LIB_DIR)
 	$(PJ_SH_CP) ${SOURCE}/bus/.libs/dbus-daemon $(HOMEX_BIN_DIR)
 	#$(PJ_SH_CP) ${SOURCE}/tools/.libs/dbus-monitor $(HOMEX_BIN_DIR)
 
 	#$(PJ_SH_MKDIR) $(HOMEX_INC_DIR)/dbus-1.0/dbus
 	#$(PJ_SH_CP) ${SOURCE}/dbus/*.h $(HOMEX_INC_DIR)/dbus-1.0/dbus
+else
+	$(PJ_SH_CP) ${SOURCE}/$(PJ_BUILD_DIR)/libs/libdbus*.so* $(HOMEX_LIB_DIR)
+	$(PJ_SH_CP) ${SOURCE}/$(PJ_BUILD_DIR)/bin/dbus-daemon $(HOMEX_BIN_DIR)
+	#$(PJ_SH_CP) ${SOURCE}/$(PJ_BUILD_DIR)/bin/dbus-monitor $(HOMEX_BIN_DIR)
+endif
 endif

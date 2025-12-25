@@ -197,6 +197,15 @@ LIBS_yes += -lsqlite3
 endif
 endif
 
+ifeq ("$(PJ_HAS_LIBPSL)", "yes")
+ifneq ("$(wildcard $(SDK_LIB_DIR)/libpsl.so)","")
+LIBS_yes += -lpsl
+else
+LIBS_yes += -lpsl
+CFLAGS += $(shell pkg-config --cflags libpsl)
+endif
+endif
+
 ifeq ("$(PJ_HAS_CURL)", "yes")
 ifneq ("$(wildcard $(SDK_LIB_DIR)/libcurl.so)","")
 LIBS_yes += -lcurl
@@ -264,6 +273,10 @@ LIBS_yes += -lgobject-2.0 -lgio-2.0 -lglib-2.0
 ifeq ("$(PJ_CROSS)", "")
 CFLAGS += $(shell pkg-config --cflags gio-2.0 gio-unix-2.0 glib-2.0)
 endif
+endif
+
+ifeq ("$(PJ_HAS_OPENSSL_SYSROOT)", "yes")
+LIBS_yes += -lssl -lcrypto
 endif
 
 ifeq ("$(PJ_HAS_OPENSSL)", "yes")

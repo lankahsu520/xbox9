@@ -1,0 +1,78 @@
+SOURCE_PREFIX=awsX9
+#SOURCE_VERSION_GZ=git
+#SOURCE_VERSION_GZ=
+SOURCE_VERSION_GZ=$(PJ_AWSX9_VERSION)
+SOURCE=$(SOURCE_PREFIX)-$(SOURCE_VERSION_GZ)
+GIT_SERVER=https://github.com/lankahsu520/awsX9.git
+#awsX9 is an api of AWS SDK (C++).
+#https://github.com/lankahsu520/awsX9
+
+TOP = $(shell pwd)
+PWD = $(shell pwd)
+
+#** LIBXXX_yes **
+LIBXXX_SO = \
+						$(wildcard $(SOURCE)/lib*.so*)
+
+#** Target (CLEAN_BINS) **
+CLEAN_BINS = \
+
+#** Target (DUMMY_BINS) **
+DUMMY_BINS = \
+						$(CLEAN_BINS)
+
+#** Target (SHELL_SBINS) **
+SHELL_SBINS = $(wildcard sh/*.sh)
+
+DUMMY_SBINS = $(SHELL_SBINS)
+
+.PHONY: all clean distclean install romfs
+all: .configured
+	@[ -d $(SOURCE) ] && make -C $(SOURCE) || echo -n ""
+
+clean:
+	@[ -d $(SOURCE) ] && make -C $(SOURCE) clean || echo -n ""
+
+distclean:
+ifneq ("$(GIT_SERVER)", "")
+	[ "$(SOURCE_VERSION_GZ)" = "git" ] && $(PJ_SH_RMDIR) $(SOURCE) || echo -n ""
+	[ "$(SOURCE_VERSION_GZ)" != "git" ] && [ -f $(SOURCE).tar.* ] && $(PJ_SH_RMDIR) $(SOURCE) || echo -n ""
+else
+	[ -d $(SOURCE)/$(PJ_CMAKE_BUILD_DIR) ] && $(PJ_SH_RMDIR) $(SOURCE)/$(PJ_CMAKE_BUILD_DIR) || echo -n ""
+endif
+
+.unpack:
+	tar -xvf $(PJ_DOWNLOAD)/$(SOURCE).tar.* \
+	|| git clone --recurse-submodules $(GIT_SERVER) $(SOURCE) \
+	|| echo "unpack error !!! $(SOURCE)"
+	touch $@
+
+.patched: .unpack
+	if [ -d patches/$(SOURCE) ]; then \
+		$(PJ_SH_CP) patches/$(SOURCE)/* $(SOURCE); \
+	fi
+	touch $@
+
+.configured: .patched
+	touch $@
+
+install:
+	@[ -d $(SOURCE) ] && make -C $(SOURCE) install || echo -n ""
+
+romfs:
+ifneq ("$(HOMEX_ROOT_DIR)", "")
+	[ "$(DUMMY_BINS)" = "" ] || $(PJ_SH_MKDIR) $(HOMEX_BIN_DIR)
+	@for subbin in $(DUMMY_BINS); do \
+		$(PJ_SH_CP) $$subbin $(HOMEX_BIN_DIR); \
+		$(STRIP) $(HOMEX_BIN_DIR)/`basename $$subbin`; \
+	done
+	[ "$(LIBXXX_SO)" = "" ] || $(PJ_SH_MKDIR) $(HOMEX_LIB_DIR)
+	@for sublib in $(LIBXXX_SO); do \
+		$(PJ_SH_CP) $$sublib* $(HOMEX_LIB_DIR); \
+		$(STRIP) $(HOMEX_LIB_DIR)/`basename $$sublib`; \
+	done
+	[ "$(DUMMY_SBINS)" = "" ] || $(PJ_SH_MKDIR) $(HOMEX_SBIN_DIR)
+	@for subshell in $(DUMMY_SBINS); do \
+		$(PJ_SH_CP) $$subshell $(HOMEX_SBIN_DIR); \
+	done
+endif

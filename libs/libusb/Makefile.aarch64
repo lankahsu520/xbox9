@@ -37,8 +37,11 @@ endif
 	touch $@
 
 .configured: .patched
+	if [ -d $(SOURCE)/bootstrap.sh ]; then \
+		cd $(SOURCE) \
+		&& sh bootstrap.sh; \
+	fi
 	cd $(SOURCE) \
-	&& sh bootstrap.sh \
 	&& $(CONFIGURE_FLAGS) ./configure \
 		--prefix=$(SDK_ROOT_DIR) \
 		--host=$(PJ_HOST) \

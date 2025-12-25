@@ -49,6 +49,7 @@ endif
 		--enable-rtsp \
 		--enable-versioned-symbols \
 		--disable-static \
+		--without-libpsl \
 		$(CONFIGURE_EXT_FLAGS) \
 		--target=$(PJ_HOST)
 	touch $@

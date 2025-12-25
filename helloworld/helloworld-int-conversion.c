@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 #include "helloworld_dbg.h"
-//#include "helloworld_json.h"
+#include "helloworld_json.h"
 #include <jansson.h>
 
 #define TAG "helloworld_no-int-conversion"

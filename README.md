@@ -28,6 +28,12 @@
 > - 定版
 > - 沒有多餘的檔案，如 .git、.svn。
 
+## 2.1. Open-source (common)
+
+> 如果是採用 Toolchain （有時不見得有 sysroot）進行編譯時，儘量讓編譯的版本與實際執行的版本一致。
+
+> 當 Toolchain - sysroot （FAE 提供的） 裏的版本過舊時，可能就要把該版本刪除或是替換掉，不要有不同版本存在。
+
 #### - [cJSON](https://https://github.com/DaveGamble/cJSON) (PJ_HAS_CJSON)
 
 #### - [curl](https://curl.haxx.se) (PJ_HAS_CURL)
@@ -35,6 +41,8 @@
 #### - [dbus](https://www.freedesktop.org/wiki/Software/dbus/) (PJ_HAS_DBUS)
 
 #### - [jansson](https://github.com/akheron/jansson) (PJ_HAS_JANSSON)
+
+#### - [libpsl](https://github.com/rockdaboot/libpsl) (PJ_HAS_LIBPSL)
 
 #### - [libusb](https://github.com/libusb/libusb) (PJ_HAS_LIBUSB)
 
@@ -46,6 +54,21 @@
 
 #### - [openssl](https://www.openssl.org) (PJ_HAS_OPENSSL)
 #### - [utilx9](https://github.com/lankahsu520/utilx9) (PJ_HAS_UTILX9)
+
+> 本人開發
+
+## 2.2. vendor
+
+### 2.2.1. [aws](https://github.com/aws)
+
+> Amazon Web Services
+
+#### - [aws-sdk-cpp](https://github.com/aws/aws-sdk-cpp) (PJ_HAS_AWS_SDK_CPP)
+
+#### - [awsX9](https://github.com/lankahsu520/awsX9) (PJ_HAS_AWSX9)
+
+> 本人開發
+
 # 3. Current Status
 
 ## 3.1. Eenvironment
@@ -151,7 +174,7 @@ $ echo ${HOMEX_ROOT_DIR}
 /work/xbox9/install/UTILX9_X86_rootfs
 
 $ tree -L 1 ${HOMEX_ROOT_DIR}
-/yocto/xbox9/install/UTILX9_X86_rootfs
+/work/xbox9/install/UTILX9_X86_rootfs
 ├── bin
 ├── etc
 ├── include

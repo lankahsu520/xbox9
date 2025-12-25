@@ -1,19 +1,27 @@
 # 1. Overview
-usbHunter is an application that checks usb plugged and unplugged. Find which TTY device connected over USB.
-
-You don't need to spend too much time on libusb.
+> usbHunter is an application that checks usb plugged and unplugged. Find which TTY device connected over USB.
+>
+> You don't need to spend too much time on libusb.
 
 # 2. Depend on
 
-- [utilx9](https://github.com/lankahsu520/utilx9)
-- [libusb](https://github.com/libusb/libusb)
+#### - [utilx9](https://github.com/lankahsu520/utilx9)
+#### - [libusb](https://github.com/libusb/libusb)
 
 # 3. Current Status
 
-
+> 
 
 # 4. Build
-   ```
+
+> 已經整合進 [xbox9](https://github.com/lankahsu520/xbox9)，相關步驟請參考 [xbox9](https://github.com/lankahsu520/xbox9)。
+
+   ```bash
+$ pwd
+/work/xbox9
+$ cd user/common/usbHunter
+$ make distclean
+# update 
 $ make
    ```
 

@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <string.h>
+
 #define TAG "helloworld_warning"
 
 int main(int argc, char *argv[])
@@ -6,7 +9,7 @@ int main(int argc, char *argv[])
 
 	char buff[128] = "123";
 
-	printf("Hello world !!! (%d)\n", strlen(buff));
+	printf("Hello world !!! (%ld)\n", strlen(buff));
 
 	return 0;
 }

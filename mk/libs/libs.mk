@@ -141,6 +141,9 @@ LIBS_CHECK_$(PJ_HAS_NLOHMANNJSON) += $(SDK_INC_DIR)/nlohmann/json.hpp
 LIBDIRS_$(PJ_HAS_MININI) += $(PJ_LIBS_DIR)/minIni
 LIBS_CHECK_$(PJ_HAS_MININI) += $(SDK_LIB_DIR)/libminIni.so
 
+LIBDIRS_$(PJ_HAS_LIBPSL) += $(PJ_LIBS_DIR)/libpsl
+LIBS_CHECK_$(PJ_HAS_LIBPSL) += $(SDK_LIB_DIR)/libpsl.so
+
 #** config **
 LIBDIRS_$(PJ_HAS_LIBCONFIG) += $(PJ_LIBS_DIR)/libconfig
 LIBS_CHECK_$(PJ_HAS_LIBCONFIG) += $(SDK_LIB_DIR)/libconfig.so
