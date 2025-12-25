@@ -16,6 +16,10 @@ ifeq ("$(PJ_HAS_NGHTTP2)", "yes")
 CONFIGURE_EXT_FLAGS =\
 		--with-nghttp2=$(SDK_ROOT_DIR)
 endif
+ifneq ("$(PJ_HAS_LIBPSL)", "yes")
+CONFIGURE_EXT_FLAGS +=\
+		--without-libpsl
+endif
 
 .PHONY: all clean distclean install romfs
 all: .configured

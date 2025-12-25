@@ -275,10 +275,6 @@ CFLAGS += $(shell pkg-config --cflags gio-2.0 gio-unix-2.0 glib-2.0)
 endif
 endif
 
-ifeq ("$(PJ_HAS_OPENSSL_SYSROOT)", "yes")
-LIBS_yes += -lssl -lcrypto
-endif
-
 ifeq ("$(PJ_HAS_OPENSSL)", "yes")
 ifneq ("$(wildcard $(SDK_LIB_DIR)/libssl.so)","")
 LIBS_yes += -lssl -lcrypto

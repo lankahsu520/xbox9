@@ -12,6 +12,7 @@ PWD = $(shell pwd)
 
 CMAKE_VERBOSE="VERBOSE=1"
 CMAKE_FLAGS = \
+		-DENFORCE_SUBMODULE_VERSIONS=OFF \
 		-DCMAKE_PREFIX_PATH=$(SDK_ROOT_DIR) \
 		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
 		-DBUILD_ONLY="dynamodb;iam;s3;sts"
@@ -71,7 +72,6 @@ distclean:
 	&& $(PJ_SH_MKDIR) $(PJ_CMAKE_BUILD_DIR) \
 	&& cd $(PJ_CMAKE_BUILD_DIR) \
 	&& cmake \
-		-DENFORCE_SUBMODULE_VERSIONS=OFF \
 		$(CMAKE_FLAGS) \
 		$(PJ_CMAKE_FLAGS) \
 		-DCMAKE_TOOLCHAIN_FILE=../cmake/build.cmake \
