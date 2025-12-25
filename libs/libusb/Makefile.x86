@@ -37,7 +37,7 @@ endif
 	touch $@
 
 .configured: .patched
-	if [ -d $(SOURCE)/bootstrap.sh ]; then \
+	if [ -f $(SOURCE)/bootstrap.sh ]; then \
 		cd $(SOURCE) \
 		&& sh bootstrap.sh; \
 	fi
